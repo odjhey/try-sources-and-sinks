@@ -1,0 +1,36 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model SinkHeader {
+  id String @id @default(cuid())
+
+  sinkType String
+  sinkRef  String // this is same with database id, should remove if not needed
+  sinkInfo Json
+
+  sourceType String
+  sourceRef  String
+  sourceInfo Json
+
+  operation     String
+  operationInfo Json
+
+  SinkItem SinkItem[]
+}
+
+model SinkItem {
+  id       String     @id @default(cuid())
+  header   SinkHeader @relation(fields: [headerId], references: [id])
+  headerId String
+
+  ok     Boolean
+  input  Json
+  result Json
+}
