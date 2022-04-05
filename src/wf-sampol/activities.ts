@@ -45,10 +45,7 @@ export const activityExtractAndSaveRaw: TActivityPipe<"file", "db"> = async ({
   return process({ source, options, target }, async ({ content, stat }) => {
     return {
       target,
-      source: {
-        ...source,
-        id: `${source.info.bucket}/${source.info.filePath}`,
-      },
+      source,
       operation: {
         operation: "EXTRACT_AND_SAVE_RAW",
         operationInfo: {},
@@ -90,36 +87,6 @@ export const activityValidateDeliverySchema: TErrorableActivityPipe<
         },
 
         items: parseResult,
-      };
-    }
-  );
-};
-
-export const activityTestRead: TErrorableActivityPipe<
-  "db",
-  "db",
-  "db"
-> = async ({ source, options, target }) => {
-  // TODO: add a decent logger
-
-  return processCanError(
-    { source, options, target, skipWrite: true },
-    async ({ content, stat }) => {
-      console.log(content);
-
-      return {
-        canError: true,
-        target,
-        source: {
-          ...source,
-          id: source.info.id,
-        },
-        operation: {
-          operation: "SOME_TESTING",
-          operationInfo: {},
-        },
-
-        items: [],
       };
     }
   );
