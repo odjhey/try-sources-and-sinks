@@ -1,6 +1,4 @@
 import { analyzeRawFrame } from "../lib/analyzers";
-import { readSourceTypeDb } from "../lib/functions/readers";
-import * as SinkRepo from "../lib/repos/sink";
 import * as Parsers from "../lib/parsers";
 import { TErrorableActivityPipe, TActivityPipe } from "../types/core";
 import { process, processCanError } from "../lib/functions/generic-process";
@@ -18,10 +16,7 @@ export const activityAnalyzeFile: TActivityPipe<"file", "db"> = async ({
 
     return {
       target,
-      source: {
-        ...source,
-        id: `${source.info.bucket}/${source.info.filePath}`,
-      },
+      source,
       operation: {
         operation: "ANALYZE_FILE",
         operationInfo: {},
