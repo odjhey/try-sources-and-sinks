@@ -7,40 +7,21 @@ import {
 import { readSourceTypeDb, serializeStream } from "../lib/readers";
 import * as SinkRepo from "../lib/repos/sink";
 import * as Parsers from "../lib/parsers";
-
-/*
-  sourceType: file, sourceRef: asdlfkj, sourceInfo: { bucket, path },
-  sinkType: db, sinkRef: id, sinkInfo: {dbName: etc}
-  operation: READ_FILE, operationInfo: {version: ''}
-*/
-
-type TSourceSinkDefinition<
-  A extends "source" | "sink",
-  T extends "file" | "db"
-> = {
-  as: A;
-  type: T;
-  ref: string;
-  info: T extends "file"
-    ? { bucket: string; filePath: string; mimeType: string }
-    : { db: string; table: string } & Record<string, any>;
-};
+import { TActivityPipe } from "../types/core";
 
 // TODO: continue later
-export async function activityAnalyzeFile({
-  source,
-  sink,
-}: {
-  source: TSourceSinkDefinition<"source", "file">;
-  sink: TSourceSinkDefinition<"sink", "db">;
-}): Promise<any> {
-  // TODO: add a decent logger
 
-  const { content, stat } = await readFile(source);
+export const activityAnalyzeFile: TActivityPipe<"file", "db", "db"> = async ({
+  source,
+  options,
+  target,
+}) => {
+  // TODO: add a decent logger
+  const { content, stat } = await readFile(source.info);
   const analysis = await analyzeRawFrame(content as any[]);
 
   const { id } = await SinkRepo.saveHeader({
-    sink,
+    target,
     source,
     operation: {
       operation: "ANALYZE_FILE",
@@ -60,15 +41,14 @@ export async function activityAnalyzeFile({
   });
 
   return {
-    as: "sink",
     type: "db",
     info: { db: "", table: "", count },
-    ref: id,
+    refId: id,
   };
-}
+};
 
-const readFile = async (source: TSourceSinkDefinition<"source", "file">) => {
-  const { bucket, filePath } = source.info;
+const readFile = async (fileInfo: { bucket: string; filePath: string }) => {
+  const { bucket, filePath } = fileInfo;
   const readable = await getFileAsStream(getClient(), { bucket, filePath });
 
   // TODO: if (["csv", "excel"]source.info.mimeType)
@@ -78,19 +58,17 @@ const readFile = async (source: TSourceSinkDefinition<"source", "file">) => {
   return { content, stat };
 };
 
-export async function activityExtractAndSaveRaw({
-  source,
-  sink,
-}: {
-  source: TSourceSinkDefinition<"source", "file">;
-  sink: TSourceSinkDefinition<"sink", "db">;
-}): Promise<TSourceSinkDefinition<"sink", "db">> {
+export const activityExtractAndSaveRaw: TActivityPipe<
+  "file",
+  "db",
+  "db"
+> = async ({ source, options, target }) => {
   // TODO: add a decent logger
 
-  const { content } = await readFile(source);
+  const { content } = await readFile(source.info);
 
   const { id } = await SinkRepo.saveHeader({
-    sink,
+    target: { type: target.type, info: target.info },
     source,
     operation: {
       operation: "EXTRACT_AND_SAVE_RAW",
@@ -108,24 +86,21 @@ export async function activityExtractAndSaveRaw({
   });
 
   return {
-    as: "sink",
     type: "db",
     info: { db: "", table: "", count },
-    ref: id,
+    refId: id,
   };
-}
+};
 
-export async function activityValidateDeliverySchema({
-  source,
-  sink,
-}: {
-  source: TSourceSinkDefinition<"source", "db">;
-  sink: TSourceSinkDefinition<"sink", "db">;
-}): Promise<TSourceSinkDefinition<"sink", "db">> {
+export const activityValidateDeliverySchema: TActivityPipe<
+  "db",
+  "db",
+  "db"
+> = async ({ source, options, target }) => {
   // TODO: add a decent logger
 
   const sourceContent = await readSourceTypeDb({
-    ref: source.ref,
+    ref: source.refId,
     info: { db: "", table: "" },
     filters: [],
   });
@@ -135,7 +110,7 @@ export async function activityValidateDeliverySchema({
   );
 
   const { id } = await SinkRepo.saveHeader({
-    sink,
+    target,
     source,
     operation: {
       operation: "PARSE_DELIVERY",
@@ -149,11 +124,10 @@ export async function activityValidateDeliverySchema({
   });
 
   return {
-    as: "sink",
     type: "db",
     info: { db: "", table: "", count },
-    ref: id,
+    refId: id,
   };
-}
+};
 
 // input -> logic -> save -> result saveId

@@ -5,37 +5,37 @@ import {
 } from "./activities";
 import { WorkflowExtractRawToDb } from "./workflow";
 
+/*
+pipe: ( source, options ) => {info: {hasOk, hasError}, ok: sink, error: sink}
+*/
+
 const runLocal: typeof WorkflowExtractRawToDb = async ({
   bucket,
   filePath,
 }) => {
   const savedItemsSink = await activityExtractAndSaveRaw({
     source: {
-      as: "source",
       type: "file",
       info: {
         bucket,
         filePath,
-        mimeType: "",
       },
-      ref: `${bucket}\\${filePath}`, // TODO: make unique
+      refId: `${bucket}\\${filePath}`, // TODO: make unique
     },
-    sink: {
-      as: "sink",
+    target: {
       type: "db",
       info: { db: "", table: "" },
-      ref: "", // TODO: REVISIT
     },
+    options: {},
   });
 
   const validate = await activityValidateDeliverySchema({
-    source: { ...savedItemsSink, as: "source" },
-    sink: {
-      as: "sink",
+    source: { ...savedItemsSink },
+    target: {
       type: "db",
       info: { db: "", table: "" },
-      ref: "", // TODO: REVISIT
     },
+    options: {},
   });
 
   console.log(validate);

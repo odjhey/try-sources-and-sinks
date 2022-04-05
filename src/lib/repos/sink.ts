@@ -1,40 +1,28 @@
 import { db } from "../db";
 import { nanoid } from "nanoid";
 
-type TSourceSinkDefinition<
-  A extends "source" | "sink",
-  T extends "file" | "db"
-> = {
-  as: A;
-  type: T;
-  ref: string;
-  info: T extends "file"
-    ? { bucket: string; filePath: string; mimeType: string }
-    : { db: string; table: string };
-};
-
 export const saveHeader = async ({
-  sink,
+  target,
   source,
   operation: { operation, operationInfo },
 }: {
-  sink: TSourceSinkDefinition<any, any>;
-  source: TSourceSinkDefinition<any, any>;
+  target: { type: string; info: any };
+  source: { type: string; refId: string; info: any };
   operation: {
     operation: string;
     operationInfo: Record<string, any>;
   };
 }) => {
-  const sinkRef = sink.ref ? sink.ref : nanoid();
+  const refId = nanoid();
   const resultDbEntry = await db.sinkHeader.create({
     data: {
-      id: sinkRef,
-      sinkType: sink.type,
-      sinkRef: sinkRef,
-      sinkInfo: sink.info,
+      id: refId,
+      sinkType: target.type,
+      sinkRef: refId,
+      sinkInfo: target.info,
 
       sourceType: source.type,
-      sourceRef: source.ref,
+      sourceRef: source.refId,
       sourceInfo: source.info,
 
       operation: operation,
