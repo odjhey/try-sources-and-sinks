@@ -2,6 +2,7 @@ import {
   activityExtractAndSaveRaw,
   activityAnalyzeFile,
   activityValidateDeliverySchema,
+  activityTestRead,
 } from "./activities";
 import { WorkflowExtractRawToDb } from "./workflow";
 
@@ -13,6 +14,7 @@ const runLocal: typeof WorkflowExtractRawToDb = async ({
   bucket,
   filePath,
 }) => {
+  /*
   const savedItemsSink = await activityExtractAndSaveRaw({
     source: {
       type: "file",
@@ -36,6 +38,19 @@ const runLocal: typeof WorkflowExtractRawToDb = async ({
   });
 
   console.log("validation result", validate);
+  */
+
+  await activityTestRead({
+    source: {
+      type: "db",
+      info: {
+        id: "uvm7XUXbdJYaInDYsrXzN",
+      },
+    },
+    target: {
+      type: "db",
+    },
+  });
 };
 
 (() => {
