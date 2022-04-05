@@ -26,23 +26,20 @@ export const serializeStream = async (readable: Readable) => {
   });
 };
 
-export const readSourceTypeDb = async (source: {
-  ref: string;
-  info: { db: string; table: string } & Record<string, any>;
-  filters: { prio: number; name: string }[];
-}) => {
+export const readSourceTypeDb = async (
+  where: { headerId: string },
+  filters: { prio: number; name: string }[]
+) => {
   // const builtins
 
-  const hasBuiltInOkOnly = source.filters.find((f) => f.name === "BUILTINS_OK");
-  const hasBuiltInErrorOnly = source.filters.find(
-    (f) => f.name === "BUILTINS_ERROR"
-  );
+  const hasBuiltInOkOnly = filters.find((f) => f.name === "BUILTINS_OK");
+  const hasBuiltInErrorOnly = filters.find((f) => f.name === "BUILTINS_ERROR");
 
   if (hasBuiltInOkOnly) {
-    return SinkRepo.getItems({ headerId: source.ref, ok: true });
+    return SinkRepo.getItems({ headerId: where.headerId, ok: true });
   }
   if (hasBuiltInErrorOnly) {
-    return SinkRepo.getItems({ headerId: source.ref, ok: false });
+    return SinkRepo.getItems({ headerId: where.headerId, ok: false });
   }
-  return SinkRepo.getItems({ headerId: source.ref });
+  return SinkRepo.getItems({ headerId: where.headerId });
 };

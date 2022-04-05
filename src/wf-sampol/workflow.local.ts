@@ -20,25 +20,22 @@ const runLocal: typeof WorkflowExtractRawToDb = async ({
         bucket,
         filePath,
       },
-      refId: `${bucket}\\${filePath}`, // TODO: make unique
     },
     target: {
       type: "db",
-      info: { db: "", table: "" },
     },
-    options: {},
   });
+
+  console.log("savedItems", savedItemsSink);
 
   const validate = await activityValidateDeliverySchema({
-    source: { ...savedItemsSink },
+    source: savedItemsSink,
     target: {
       type: "db",
-      info: { db: "", table: "" },
     },
-    options: {},
   });
 
-  console.log(validate);
+  console.log("validation result", validate);
 };
 
 (() => {

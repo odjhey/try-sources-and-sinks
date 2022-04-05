@@ -6,8 +6,8 @@ export const saveHeader = async ({
   source,
   operation: { operation, operationInfo },
 }: {
-  target: { type: string; info: any };
-  source: { type: string; refId: string; info: any };
+  target: { type: string; info?: any };
+  source: { type: string; id: string; info: any };
   operation: {
     operation: string;
     operationInfo: Record<string, any>;
@@ -18,11 +18,10 @@ export const saveHeader = async ({
     data: {
       id: refId,
       sinkType: target.type,
-      sinkRef: refId,
-      sinkInfo: target.info,
+      sinkInfo: target.info || {},
 
       sourceType: source.type,
-      sourceRef: source.refId,
+      sourceId: source.id,
       sourceInfo: source.info,
 
       operation: operation,
@@ -45,7 +44,7 @@ export const saveItems = async ({
       headerId,
       input: item.input,
       ok: item.ok,
-      result: item.ok ? item.data : item.error,
+      data: item.ok ? item.data : item.error,
     })),
   });
 

@@ -7,11 +7,11 @@ import {
 import { readSourceTypeDb, serializeStream } from "../lib/readers";
 import * as SinkRepo from "../lib/repos/sink";
 import * as Parsers from "../lib/parsers";
-import { TActivityPipe } from "../types/core";
+import { TErrorableActivityPipe, TActivityPipe } from "../types/core";
 
 // TODO: continue later
 
-export const activityAnalyzeFile: TActivityPipe<"file", "db", "db"> = async ({
+export const activityAnalyzeFile: TActivityPipe<"file", "db"> = async ({
   source,
   options,
   target,
@@ -22,7 +22,7 @@ export const activityAnalyzeFile: TActivityPipe<"file", "db", "db"> = async ({
 
   const { id } = await SinkRepo.saveHeader({
     target,
-    source,
+    source: { ...source, id: `${source.info.bucket}/${source.info.filePath}` },
     operation: {
       operation: "ANALYZE_FILE",
       operationInfo: {},
@@ -42,8 +42,7 @@ export const activityAnalyzeFile: TActivityPipe<"file", "db", "db"> = async ({
 
   return {
     type: "db",
-    info: { db: "", table: "", count },
-    refId: id,
+    info: { db: "", table: "", id, count },
   };
 };
 
@@ -58,18 +57,18 @@ const readFile = async (fileInfo: { bucket: string; filePath: string }) => {
   return { content, stat };
 };
 
-export const activityExtractAndSaveRaw: TActivityPipe<
-  "file",
-  "db",
-  "db"
-> = async ({ source, options, target }) => {
+export const activityExtractAndSaveRaw: TActivityPipe<"file", "db"> = async ({
+  source,
+  options,
+  target,
+}) => {
   // TODO: add a decent logger
 
   const { content } = await readFile(source.info);
 
   const { id } = await SinkRepo.saveHeader({
     target: { type: target.type, info: target.info },
-    source,
+    source: { ...source, id: `${source.info.bucket}/${source.info.filePath}` },
     operation: {
       operation: "EXTRACT_AND_SAVE_RAW",
       operationInfo: {},
@@ -85,49 +84,48 @@ export const activityExtractAndSaveRaw: TActivityPipe<
     })),
   });
 
-  return {
-    type: "db",
-    info: { db: "", table: "", count },
-    refId: id,
-  };
+  return { info: { id, count }, type: "db" };
 };
 
-export const activityValidateDeliverySchema: TActivityPipe<
+export const activityValidateDeliverySchema: TErrorableActivityPipe<
   "db",
   "db",
   "db"
 > = async ({ source, options, target }) => {
   // TODO: add a decent logger
 
-  const sourceContent = await readSourceTypeDb({
-    ref: source.refId,
-    info: { db: "", table: "" },
-    filters: [],
-  });
+  const sourceContent = await readSourceTypeDb({ headerId: source.info.id }, [
+    { prio: 99, name: "BUILTINS_OK" },
+  ]);
 
   const parseResult = sourceContent.resultDbEntry.map((c) =>
-    Parsers.Delivery.parse(c.result)
+    Parsers.Delivery.parse(c.data)
   );
 
   const { id } = await SinkRepo.saveHeader({
     target,
-    source,
+    source: { ...source, id: source.info.id },
     operation: {
       operation: "PARSE_DELIVERY",
       operationInfo: {},
     },
   });
 
-  const { count } = await SinkRepo.saveItems({
+  const { count: _count } = await SinkRepo.saveItems({
     headerId: id,
     items: parseResult,
   });
 
+  const hasError = parseResult.some((item) => {
+    return !item.ok;
+  });
+  const hasOk = parseResult.some((item) => {
+    return item.ok;
+  });
+
   return {
-    type: "db",
-    info: { db: "", table: "", count },
-    refId: id,
+    runInfo: { hasError, hasOk },
+    errorSink: { info: { id }, type: "db" },
+    okSink: { info: { id }, refId: id, type: "db" },
   };
 };
-
-// input -> logic -> save -> result saveId

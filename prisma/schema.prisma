@@ -9,14 +9,12 @@ datasource db {
 }
 
 model SinkHeader {
-  id String @id @default(cuid())
-
+  id       String @id @default(cuid())
   sinkType String
-  sinkRef  String // this is same with database id, should remove if not needed
   sinkInfo Json
 
   sourceType String
-  sourceRef  String
+  sourceId   String
   sourceInfo Json
 
   operation     String
@@ -30,7 +28,7 @@ model SinkItem {
   header   SinkHeader @relation(fields: [headerId], references: [id])
   headerId String
 
-  ok     Boolean
-  input  Json
-  result Json
+  ok    Boolean
+  input Json
+  data  Json
 }
