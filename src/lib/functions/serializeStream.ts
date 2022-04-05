@@ -1,6 +1,5 @@
 import * as XLSX from "xlsx";
 import { Readable } from "stream";
-import * as SinkRepo from "./repos/sink";
 
 // TODO: see if need to change based on mime/file extension
 export const serializeStream = async (readable: Readable) => {
@@ -24,22 +23,4 @@ export const serializeStream = async (readable: Readable) => {
       resolve(jsa);
     });
   });
-};
-
-export const readSourceTypeDb = async (
-  where: { headerId: string },
-  filters: { prio: number; name: string }[]
-) => {
-  // const builtins
-
-  const hasBuiltInOkOnly = filters.find((f) => f.name === "BUILTINS_OK");
-  const hasBuiltInErrorOnly = filters.find((f) => f.name === "BUILTINS_ERROR");
-
-  if (hasBuiltInOkOnly) {
-    return SinkRepo.getItems({ headerId: where.headerId, ok: true });
-  }
-  if (hasBuiltInErrorOnly) {
-    return SinkRepo.getItems({ headerId: where.headerId, ok: false });
-  }
-  return SinkRepo.getItems({ headerId: where.headerId });
 };

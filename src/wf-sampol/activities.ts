@@ -4,10 +4,11 @@ import {
   getFileAsStream,
   getFileStat,
 } from "../lib/object-store-client";
-import { readSourceTypeDb, serializeStream } from "../lib/readers";
+import { readSourceTypeDb } from "../lib/functions/readers";
 import * as SinkRepo from "../lib/repos/sink";
 import * as Parsers from "../lib/parsers";
 import { TErrorableActivityPipe, TActivityPipe } from "../types/core";
+import { serializeStream } from "../lib/functions/serializeStream";
 
 // TODO: continue later
 
