@@ -6,7 +6,7 @@ import { process, processCanError } from "../lib/functions/generic-process";
 // TODO: continue later
 // TODO: add a decent logger
 
-export const activityAnalyzeFile: TActivityPipe<"file", "db"> = async ({
+export const activityAnalyzeFile: TActivityPipe<"file", "db", any> = async ({
   source,
   options,
   target,
@@ -32,11 +32,11 @@ export const activityAnalyzeFile: TActivityPipe<"file", "db"> = async ({
   });
 };
 
-export const activityExtractAndSaveRaw: TActivityPipe<"file", "db"> = async ({
-  source,
-  options,
-  target,
-}) => {
+export const activityExtractAndSaveRaw: TActivityPipe<
+  "file",
+  "db",
+  any
+> = async ({ source, options, target }) => {
   return process({ source, options, target }, async ({ content, stat }) => {
     return {
       target,
@@ -65,12 +65,12 @@ export const activityValidateDeliverySchema: TErrorableActivityPipe<
   return processCanError(
     { source, options, target },
     async ({ content, stat }) => {
+      // -- your thing here
       const parseResult = content.resultDbEntry.map((c: any) =>
         Parsers.Delivery.parse(c.data)
       );
 
       return {
-        canError: true,
         target,
         source: {
           ...source,
@@ -82,6 +82,42 @@ export const activityValidateDeliverySchema: TErrorableActivityPipe<
         },
 
         items: parseResult,
+      };
+    }
+  );
+};
+
+export const activityValidateDeliveryAgainstDeps: TErrorableActivityPipe<
+  "db",
+  "db",
+  "db"
+> = async ({ source, options, target }) => {
+  // TODO: add a decent logger
+
+  return processCanError(
+    { source, options, target, skipWriteToSink: true },
+    async ({ content, stat }) => {
+      console.log(
+        JSON.stringify(
+          content.resultDbEntry.map((r) => r.data),
+          null,
+          2
+        ),
+        "content---"
+      );
+
+      return {
+        target,
+        source: {
+          ...source,
+          id: source.info.id,
+        },
+        operation: {
+          operation: "PARSE_DELIVERY",
+          operationInfo: {},
+        },
+
+        items: [],
       };
     }
   );

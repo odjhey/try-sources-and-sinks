@@ -24,7 +24,14 @@ type TBodyFn<I> = (args: {
     ? { refId: string; resultDbEntry: SinkItem[] }
     : unknown;
   stat: I extends "file" ? BucketItemStat : {};
-}) => Promise<TBodyFnReturn<any>>;
+}) => Promise<
+  TBodyFnReturn<
+    Array<
+      | { ok: true; input: any; data: any }
+      | { ok: false; input: any; error: any }
+    >
+  >
+>;
 
 const processBase = async <
   I extends TContainerTypes,
@@ -121,7 +128,7 @@ export const processCanError = async <
   O extends TContainerTypes,
   E extends TContainerTypes
 >(
-  { source, options, target }: TDefinition<I, O>,
+  { source, options, target, skipWriteToSink }: TDefinition<I, O>,
   fn: TBodyFn<I>
 ): Promise<{
   runInfo: { hasError: boolean; hasOk: boolean };
@@ -129,7 +136,7 @@ export const processCanError = async <
   okSink: { info: { id: string }; type: O };
 }> => {
   const { result, count, id, stat } = await processBase(
-    { source, options, target },
+    { source, options, target, skipWriteToSink },
     fn
   );
 

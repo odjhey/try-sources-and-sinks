@@ -44,9 +44,10 @@ export type TErrorableActivityPipe<
 
 export type TActivityPipe<
   I extends TContainerTypes,
-  O extends TContainerTypes
+  O extends TContainerTypes,
+  P
 > = (args: {
   source: TSource<I>;
-  options?: any;
+  options?: P;
   target: TTarget<O>;
 }) => Promise<TSink<O>>;
