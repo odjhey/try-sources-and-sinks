@@ -1,4 +1,4 @@
-import { db } from "../db";
+import { db } from "../lib/db";
 import { nanoid } from "nanoid";
 
 export const saveHeader = async ({

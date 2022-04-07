@@ -1,7 +1,7 @@
 import { SinkItem } from "@prisma/client";
 import { BucketItemStat } from "minio";
 import { TContainerTypes, TSource, TTarget } from "../../types/core";
-import * as SinkRepo from "../repos/sink";
+import * as SinkRepo from "../../repos/sink";
 import { readFile } from "./read-file";
 import { readSourceTypeDb } from "./readers";
 

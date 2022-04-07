@@ -1,4 +1,4 @@
-import * as SinkRepo from "../repos/sink";
+import * as SinkRepo from "../../repos/sink";
 
 export const readSourceTypeDb = async (
   where: { headerId: string },
