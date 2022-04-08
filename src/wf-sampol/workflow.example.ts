@@ -32,6 +32,7 @@ const runLocal: typeof WorkflowExtractRawToDb = async ({
       type: "db",
     },
   });
+  console.log(validateSink);
 
   const validate3 = await activityValidateDeliveryAgainstDeps({
     source: validateSink.okSink,

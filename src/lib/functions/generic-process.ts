@@ -116,7 +116,7 @@ const readBucket = async (source: any) => {
 };
 const readFromDb = async (source: any) => {
   const content = await readSourceTypeDb({ headerId: source.info.id }, [
-    { prio: 99, name: "BUILTINS_OK" },
+    // { prio: 99, name: "BUILTINS_OK" },
   ]);
 
   return { content, stat: {} };

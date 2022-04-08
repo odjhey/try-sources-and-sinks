@@ -2,6 +2,9 @@ import { analyzeRawFrame } from "../lib/analyzers";
 import * as Parsers from "../lib/parsers";
 import { TErrorableActivityPipe, TActivityPipe } from "../types/core";
 import { process, processCanError } from "../lib/functions/generic-process";
+import { pipeline } from "../lib/functions/pipeline";
+import { TParseResult } from "../types/util";
+import { SinkItem } from "@prisma/client";
 
 // TODO: continue later
 // TODO: add a decent logger
@@ -66,9 +69,26 @@ export const activityValidateDeliverySchema: TErrorableActivityPipe<
     { source, options, target },
     async ({ content, stat }) => {
       // -- your thing here
-      const parseResult = content.resultDbEntry.map((c: any) =>
-        Parsers.Delivery.parse(c.data)
+      const parseResult = content.resultDbEntry.map((c) =>
+        pipeline<SinkItem["data"], TParseResult<any, any, any>>(
+          [
+            Parsers.Delivery.parse,
+            (d) => {
+              if (d && typeof d === "object" && "ok" in d && d.ok === true) {
+                if (d.data.ShipmentNumber === 10000048) {
+                  return { ok: false, error: {}, input: d.input };
+                }
+              }
+
+              // error
+              return d;
+            },
+          ],
+          c.data
+        )
       );
+
+      // console.log(parseResult);
 
       return {
         target,
@@ -97,6 +117,7 @@ export const activityValidateDeliveryAgainstDeps: TErrorableActivityPipe<
   return processCanError(
     { source, options, target, skipWriteToSink: true },
     async ({ content, stat }) => {
+      /*
       console.log(
         JSON.stringify(
           content.resultDbEntry.map((r) => r.data),
@@ -105,6 +126,17 @@ export const activityValidateDeliveryAgainstDeps: TErrorableActivityPipe<
         ),
         "content---"
       );
+      */
+
+      const count = content.resultDbEntry.reduce(
+        (accu, item) => {
+          if (item.ok === true) return { ...accu, pass: accu.pass + 1 };
+          return { ...accu, error: accu.error + 1 };
+        },
+        { error: 0, pass: 0 }
+      );
+
+      console.log("count", count);
 
       return {
         target,
