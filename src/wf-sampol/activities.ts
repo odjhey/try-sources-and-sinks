@@ -76,7 +76,11 @@ export const activityValidateDeliverySchema: TErrorableActivityPipe<
             (d) => {
               if (d && typeof d === "object" && "ok" in d && d.ok === true) {
                 if (d.data.ShipmentNumber === 10000048) {
-                  return { ok: false, error: {}, input: d.input };
+                  return {
+                    ok: false,
+                    error: { message: "something wrong" },
+                    input: d.input,
+                  };
                 }
               }
 
@@ -97,7 +101,7 @@ export const activityValidateDeliverySchema: TErrorableActivityPipe<
           id: source.info.id,
         },
         operation: {
-          operation: "PARSE_DELIVERY",
+          operation: "PARSE_DELIVERYX21",
           operationInfo: {},
         },
 
