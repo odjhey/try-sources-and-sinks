@@ -13,3 +13,13 @@
 4. format check - or (masks)
 5. consistency check - example: delivery date is before shipping date <---
 6. uniqueness check
+
+## lib struct
+
+```
+- operations
+- repo
+- activityPipes
+- utils
+  - localPipes
+```
